@@ -12,6 +12,7 @@ setup(
         ]
     },
     install_requires=[
+        'django-dotenv>=1.4.2',
         'wheel>=0.29.0',
         'pip>=8.1.1',
         'setuptools>=20.2.2',

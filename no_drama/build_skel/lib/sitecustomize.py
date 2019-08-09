@@ -11,9 +11,13 @@ if extended_python_path:
     site.addsitedir(extended_python_path)
 
 if environment_path:
-    with open(environment_path) as env_file:
-        new_env_vars = json.load(env_file)
-        os.environ.update(new_env_vars)
+    if environment_path.endswith('.json'):
+        with open(environment_path) as env_file:
+            new_env_vars = json.load(env_file)
+            os.environ.update(new_env_vars)
+    else:
+        import dotenv
+        dotenv.read_dotenv(environment_path)
 
 real_settings = os.environ.get('DJANGO_SETTINGS_MODULE')
 if real_settings is not None:

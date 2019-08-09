@@ -15,36 +15,77 @@ class TestRelease(WorkInTemporaryDirectory, TestCase):
             'release'
         )
 
-    def test_release_modifies_archive(self):
-        args = Namespace(
-            build_zip=os.path.join(self.test_data, 'archive.zip'),
+        self.build_filename = os.path.join(self.test_data, 'archive.zip')
+        self.release_filename = './archive_release-testing.zip'
+
+    def make_args(
+        self,
+        vars=None,
+        paths=None,
+        requirements_file=None,
+        prepend_wsgi=None,
+        append_wsgi=None
+    ):
+        return Namespace(
+            build_zip=self.build_filename,
+            vars=vars,
+            slug='release-testing',
+            paths=paths,
+            requirements_file=requirements_file,
+            prepend_wsgi=prepend_wsgi,
+            append_wsgi=append_wsgi
+        )
+
+    def test_release_makes_new_archive_file(self):
+        self.assertFalse(os.path.exists(self.release_filename))
+
+        args = self.make_args()
+        inject_configuration(args)
+
+        self.assertTrue(os.path.exists(self.release_filename))
+
+    def check_archive_namelist(self, assertMethod, *filenames):
+        with ZipFile(self.release_filename, 'r') as zipfile:
+            archive_filenames = zipfile.namelist()
+            for filename in filenames:
+                assertMethod(filename, archive_filenames)
+
+    def assertReleaseContainsFiles(self, *filenames):
+        self.check_archive_namelist(self.assertIn, *filenames)
+
+    def assertReleaseDoesNotContainFiles(self, *filenames):
+        self.check_archive_namelist(self.assertNotIn, *filenames)
+
+    def test_if_not_provided_release_does_not_add_files(self):
+        args = self.make_args()
+        inject_configuration(args)
+
+        self.assertReleaseDoesNotContainFiles(
+            'sample_proj/wheels/wagtail-1.13.4-py2.py3-none-any.whl',
+            'sample_proj/environment.json',
+            'sample_proj/paths.d/1_custom.json',
+            'sample_proj/pre-wsgi.py-fragment',
+            'sample_proj/post-wsgi.py-fragment'
+        )
+
+    def test_release_adds_files_when_provided(self):
+        args = self.make_args(
             requirements_file=os.path.join(
                 self.test_data,
                 'extra-requirements.txt'
             ),
             vars=os.path.join(self.test_data, 'environment.json'),
-            slug='release-testing',
             paths=os.path.join(self.test_data, 'paths.json'),
             prepend_wsgi=os.path.join(self.test_data, 'prepend-wsgi.py'),
             append_wsgi=os.path.join(self.test_data, 'append-wsgi.py'),
         )
 
-        release_archive = './archive_release-testing.zip'
-        self.assertFalse(os.path.exists(release_archive))
-
         inject_configuration(args)
 
-        self.assertTrue(os.path.exists(release_archive))
-        with ZipFile(release_archive, 'r') as zipfile:
-            files = zipfile.namelist()
-
-            # Extra wheel was installed from extra-requirements.txt.
-            self.assertIn(
-                'sample_proj/wheels/wagtail-1.13.4-py2.py3-none-any.whl',
-                files
-            )
-
-            self.assertIn('sample_proj/environment.json', files)
-            self.assertIn('sample_proj/paths.d/1_custom.json', files)
-            self.assertIn('sample_proj/pre-wsgi.py-fragment', files)
-            self.assertIn('sample_proj/post-wsgi.py-fragment', files)
+        self.assertReleaseContainsFiles(
+            'sample_proj/wheels/wagtail-1.13.4-py2.py3-none-any.whl',
+            'sample_proj/environment.json',
+            'sample_proj/paths.d/1_custom.json',
+            'sample_proj/pre-wsgi.py-fragment',
+            'sample_proj/post-wsgi.py-fragment'
+        )
