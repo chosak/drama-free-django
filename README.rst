@@ -131,7 +131,7 @@ It's impossible to describe every deployment scenario, but at minimum, you must:
 
 On RHEL6, with Apache+mod_wsgi (via software collections) in daemon mode, this might look like::
 
-    WSGIDaemonProcess my_cool_daemon  processes=4 threads=15 display-name=%{GROUP} python-path=/srv/cfgov/current/venv/lib/python2.7/site-packages
+    WSGIDaemonProcess my_cool_daemon  processes=4 threads=15 display-name=%{GROUP} python-home=/srv/cfgov/current/venv
     WSGIProcessGroup my_cool_daemon
     WSGIScriptAlias / /srv/cfgov/current/wsgi.py
     Alias /static/ /srv/cfgov/current/static/
@@ -140,15 +140,8 @@ On RHEL6, with Apache+mod_wsgi (via software collections) in daemon mode, this m
       Require all granted
     </Directory>
     
-Also with mod_wsgi, it's recommended that you set an empty virtualenv as your WSGIPythonHome. 
+See `the mod_wsgi documentation <https://modwsgi.readthedocs.io/en/develop/user-guides/virtual-environments.html>`_ for additional configuration options.
 
-http://modwsgi.readthedocs.org/en/develop/user-guides/virtual-environments.html#baseline-environment
-
-We've got you covered::
-
-   WSGIPythonHome /srv/cfgov/current/empty_venv
-
-.. _empty virtualenv: 
 Known issues
 ------------
 

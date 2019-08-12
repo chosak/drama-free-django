@@ -10,7 +10,6 @@ do
   export PYTHONPATH=${PYTHONPATH}:${f}
 done
 
-python -m virtualenv --no-pip --no-wheel --no-setuptools $DIR/empty_venv
 python -m virtualenv --extra-search-dir=$DIR/bootstrap_wheels $DIR/venv
 
 SITE_PACKAGES=`find $DIR/venv -name 'site-packages'`
